@@ -2,7 +2,7 @@ schema_version: 1
 
 context:
   name: typeline
-  version: "2.4.2"
+  version: "3.0.1"
 
 package:
   name: ${{ name|lower }}
@@ -10,20 +10,36 @@ package:
 
 source:
   url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/${{ name }}-${{ version }}.tar.gz
-  sha256: 2af320bc4b0c0e9ad252d2dda3fbe6d85c5317392fec3c79bf76becc9e0e954a
+  sha256: bd33243e4b43e978ecbcffbe003b7469ae956a42e87d95d9c1f9bff439f43f11
 
 build:
-  noarch: python
   number: 0
-  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  skip: is_abi3 and not is_python_min
+  python:
+    version_independent: ${{ is_abi3 }}
+  script:
+    - ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+    - cargo-bundle-licenses --format yaml --output THIRDPARTY.yml
 
 requirements:
+  build:
+    - if: build_platform != target_platform
+      then:
+        - python
+        - cross-python_${{ target_platform }}
+        - maturin >=1.15,<2
+    - ${{ compiler('c') }}
+    - ${{ stdlib('c') }}
+    - ${{ compiler('rust') }}
+    - cargo-bundle-licenses
   host:
-    - python ${{ python_min }}.*
-    - hatchling
+    - python
+    - if: is_abi3
+      then: python-abi3
+    - maturin >=1.15,<2
     - pip
   run:
-    - python >=${{ python_min }}
+    - python
     - msgspec >=0.20
     - typing-extensions >=4.12
 
@@ -31,16 +47,37 @@ tests:
   - python:
       imports:
         - typeline
+        - typeline._native
       pip_check: true
       python_version:
-        - ${{ python_min }}.*
         - "*"
+        - if: is_abi3
+          then: ${{ python_min }}.*
+  - files:
+      source:
+        - tests/
+    requirements:
+      run:
+        - pytest
+    script:
+      - pytest tests -p no:cacheprovider -k "not test_a_wide_header_is_matched_quickly"
+  - if: is_abi3
+    then:
+      requirements:
+        run:
+          - abi3audit
+      script:
+        - if: win
+          then: abi3audit %SP_DIR%\typeline\_native.pyd -s -v --assume-minimum-abi3 ${{ python_min }}
+          else: abi3audit $SP_DIR/typeline/_native.abi3.so -s -v --assume-minimum-abi3 ${{ python_min }}
 
 about:
   homepage: https://github.com/clintval/typeline
   summary: Write dataclasses to delimited text formats and read them back again.
   license: MIT
-  license_file: LICENSE
+  license_file:
+    - LICENSE
+    - THIRDPARTY.yml
   repository: https://github.com/clintval/typeline
   documentation: https://github.com/clintval/typeline/blob/${{ version }}/README.md
 
