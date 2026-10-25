@@ -2,7 +2,7 @@ schema_version: 1
 
 context:
   name: typeline
-  version: "3.0.1"
+  version: "3.1.0"
 
 package:
   name: ${{ name|lower }}
@@ -10,7 +10,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/${{ name[0] }}/${{ name }}/${{ name }}-${{ version }}.tar.gz
-  sha256: bd33243e4b43e978ecbcffbe003b7469ae956a42e87d95d9c1f9bff439f43f11
+  sha256: e65695fd84cd45ae888880f2f87de28249a776dce3fde0c3e747b6a246b1708c
 
 build:
   number: 0
