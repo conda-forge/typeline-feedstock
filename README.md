@@ -11,7 +11,7 @@ Summary: Write dataclasses to delimited text formats and read them back again.
 
 Development: https://github.com/clintval/typeline
 
-Documentation: https://github.com/clintval/typeline/blob/3.1.0/README.md
+Documentation: https://github.com/clintval/typeline/blob/3.2.0/README.md
 
 Current build status
 ====================
